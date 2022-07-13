@@ -16,6 +16,7 @@
 
 package com.google.samples.apps.sunflower.data
 
+import android.graphics.Bitmap
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -38,6 +39,10 @@ data class Plant(
      */
     fun shouldBeWatered(since: Calendar, lastWateringDate: Calendar) =
         since > lastWateringDate.apply { add(DAY_OF_YEAR, wateringInterval) }
+
+    suspend fun fetchImage(): Bitmap {
+
+    }
 
     override fun toString() = name
 }

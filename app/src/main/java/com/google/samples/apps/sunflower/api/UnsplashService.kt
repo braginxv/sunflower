@@ -16,45 +16,49 @@
 
 package com.google.samples.apps.sunflower.api
 
+import com.google.gson.FieldNamingStrategy
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.samples.apps.sunflower.BuildConfig
 import com.google.samples.apps.sunflower.data.UnsplashSearchResponse
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import okhttp3.logging.HttpLoggingInterceptor.Level
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Query
+import com.google.samples.apps.sunflower.network.client.SimpleHttpClient
+import java.net.URL
 
 /**
  * Used to connect to the Unsplash API to fetch photos
  */
-interface UnsplashService {
+class UnsplashService {
+    private val client = SimpleHttpClient(URL(BASE_URL))
 
-    @GET("search/photos")
-    suspend fun searchPhotos(
-        @Query("query") query: String,
-        @Query("page") page: Int,
-        @Query("per_page") perPage: Int,
-        @Query("client_id") clientId: String = BuildConfig.UNSPLASH_ACCESS_KEY
-    ): UnsplashSearchResponse
+    suspend fun searchPhotos(query: String, page: Int, perPage: Int,
+                             clientId: String = BuildConfig.UNSPLASH_ACCESS_KEY): UnsplashSearchResponse {
+        val parameters: Set<Pair<String, String>> = setOf(
+            "query" to query,
+            "page" to page.toString(),
+            "per_page" to perPage.toString(),
+            "client_id" to clientId
+        )
+
+        val response = client.GET(PHOTOS, parameters = parameters)
+
+        if (response.code >= 400) {
+            throw IllegalAccessException("requested photos aren't available")
+        }
+
+        val gson = GsonBuilder().create()
+        return gson.fromJson(response.content, UnsplashSearchResponse::class.java)
+    }
+
+    suspend fun downloadPhoto(url: String): ByteArray {
+        return client.rawGET(url).content
+    }
 
     companion object {
         private const val BASE_URL = "https://api.unsplash.com/"
+        private const val PHOTOS = "search/photos"
 
         fun create(): UnsplashService {
-            val logger = HttpLoggingInterceptor().apply { level = Level.BASIC }
-
-            val client = OkHttpClient.Builder()
-                .addInterceptor(logger)
-                .build()
-
-            return Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .client(client)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(UnsplashService::class.java)
+            return UnsplashService()
         }
     }
 }

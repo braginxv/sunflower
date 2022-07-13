@@ -31,7 +31,6 @@ import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.samples.apps.sunflower.compose.plantdetail.PlantDetailsScreen
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.text.Typography.dagger
 
 /**
  * A fragment representing a single Plant detail screen.
@@ -77,11 +76,7 @@ class PlantDetailFragment : Fragment() {
     @Suppress("DEPRECATION")
     private fun createShareIntent() {
         val shareText = plantDetailViewModel.plant.value.let { plant ->
-            if (plant == null) {
-                ""
-            } else {
-                getString(R.string.share_text_plant, plant.name)
-            }
+            plant?.let { getString(R.string.share_text_plant, it.name) } ?: ""
         }
         val shareIntent = ShareCompat.IntentBuilder.from(requireActivity())
             .setText(shareText)

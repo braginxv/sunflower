@@ -17,6 +17,7 @@
 package com.google.samples.apps.sunflower.adapters
 
 import android.view.ViewGroup
+import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.platform.ComposeView
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil

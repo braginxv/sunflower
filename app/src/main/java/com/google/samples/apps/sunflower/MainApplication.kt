@@ -17,13 +17,24 @@
 package com.google.samples.apps.sunflower
 
 import android.app.Application
+import android.util.Log
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import org.techlook.ClientSystem
 
 @HiltAndroidApp
 class MainApplication : Application(), Configuration.Provider {
-    override fun getWorkManagerConfiguration(): Configuration =
-                Configuration.Builder()
-                        .setMinimumLoggingLevel(if (BuildConfig.DEBUG) android.util.Log.DEBUG else android.util.Log.ERROR)
-                        .build()
+    override fun getWorkManagerConfiguration(): Configuration {
+        Log.d(javaClass.simpleName, "configuration request....")
+        return Configuration.Builder()
+            .setMinimumLoggingLevel(if (BuildConfig.DEBUG) android.util.Log.DEBUG else android.util.Log.ERROR)
+            .build()
+    }
+
+    override fun onTerminate() {
+        ClientSystem.client().shutdown()
+        ClientSystem.client().awaitTerminating()
+
+        super.onTerminate()
+    }
 }

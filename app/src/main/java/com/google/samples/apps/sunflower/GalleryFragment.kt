@@ -32,7 +32,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlin.text.Typography.dagger
 
 @AndroidEntryPoint
 class GalleryFragment : Fragment() {

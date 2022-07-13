@@ -17,22 +17,26 @@
 package com.google.samples.apps.sunflower.adapters
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.liveData
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.google.samples.apps.sunflower.GalleryFragment
 import com.google.samples.apps.sunflower.adapters.GalleryAdapter.GalleryViewHolder
-import com.google.samples.apps.sunflower.data.UnsplashPhoto
+import com.google.samples.apps.sunflower.data.DownloadablePhoto
 import com.google.samples.apps.sunflower.databinding.ListItemPhotoBinding
 
 /**
  * Adapter for the [RecyclerView] in [GalleryFragment].
  */
 
-class GalleryAdapter : PagingDataAdapter<UnsplashPhoto, GalleryViewHolder>(GalleryDiffCallback()) {
+class GalleryAdapter : PagingDataAdapter<DownloadablePhoto, GalleryViewHolder>(GalleryDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GalleryViewHolder {
         return GalleryViewHolder(
@@ -54,31 +58,38 @@ class GalleryAdapter : PagingDataAdapter<UnsplashPhoto, GalleryViewHolder>(Galle
     class GalleryViewHolder(
         private val binding: ListItemPhotoBinding
     ) : RecyclerView.ViewHolder(binding.root) {
-        init {
-            binding.setClickListener { view ->
-                binding.photo?.let { photo ->
-                    val uri = Uri.parse(photo.user.attributionUrl)
+        private fun awaitPhotoToBeDownloaded(photo: DownloadablePhoto): LiveData<Bitmap> = liveData {
+            emit(photo.futureContent.await())
+        }
+
+        fun bind(item: DownloadablePhoto) {
+            Log.d(javaClass.simpleName, "bind gallery view")
+            binding.apply {
+                photo = item
+
+                setClickListener { view ->
+                    val uri = Uri.parse(item.unsplashPhoto.user.attributionUrl)
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     view.context.startActivity(intent)
                 }
-            }
-        }
 
-        fun bind(item: UnsplashPhoto) {
-            binding.apply {
-                photo = item
+                lifecycleOwner?.let {
+                    awaitPhotoToBeDownloaded(item).observe(it) { bitmap ->
+                        plantPhoto.setImageBitmap(bitmap)
+                    }
+                }
                 executePendingBindings()
             }
         }
     }
 }
 
-private class GalleryDiffCallback : DiffUtil.ItemCallback<UnsplashPhoto>() {
-    override fun areItemsTheSame(oldItem: UnsplashPhoto, newItem: UnsplashPhoto): Boolean {
-        return oldItem.id == newItem.id
+private class GalleryDiffCallback : DiffUtil.ItemCallback<DownloadablePhoto>() {
+    override fun areItemsTheSame(oldItem: DownloadablePhoto, newItem: DownloadablePhoto): Boolean {
+        return oldItem.unsplashPhoto.id == newItem.unsplashPhoto.id
     }
 
-    override fun areContentsTheSame(oldItem: UnsplashPhoto, newItem: UnsplashPhoto): Boolean {
-        return oldItem == newItem
+    override fun areContentsTheSame(oldItem: DownloadablePhoto, newItem: DownloadablePhoto): Boolean {
+        return oldItem.unsplashPhoto == newItem.unsplashPhoto
     }
 }

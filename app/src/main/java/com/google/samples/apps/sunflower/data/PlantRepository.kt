@@ -40,7 +40,7 @@ class PlantRepository @Inject constructor(private val plantDao: PlantDao) {
         // For Singleton instantiation
         @Volatile private var instance: PlantRepository? = null
 
-        fun getInstance(plantDao: PlantDao) =
+        fun getInstance(plantDao: PlantDao): PlantRepository =
             instance ?: synchronized(this) {
                 instance ?: PlantRepository(plantDao).also { instance = it }
             }

@@ -37,8 +37,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.data.Plant
 
@@ -59,14 +57,9 @@ fun PlantListItemView(plant: Plant, onClick: () -> Unit) {
             .padding(bottom = dimensionResource(id = R.dimen.card_bottom_margin))
     ) {
         Column(Modifier.fillMaxWidth()) {
-            val painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(plant.imageUrl)
-                    .crossfade(true)
-                    .build()
-            )
+
             Image(
-                painter = painter,
+                bitmap = plant.fetchImage(),
                 contentScale = ContentScale.Crop,
                 contentDescription = stringResource(R.string.a11y_plant_item_image),
                 modifier = Modifier
