@@ -16,20 +16,18 @@
 
 package com.google.samples.apps.sunflower.viewmodels
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.google.samples.apps.sunflower.PlantListFragment
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.data.PlantRepository
+import com.google.samples.apps.sunflower.network.client.SimpleHttpClient
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.net.URL
 import javax.inject.Inject
+import kotlin.math.*
 
 /**
  * The ViewModel for [PlantListFragment].
@@ -41,14 +39,37 @@ class PlantListViewModel @Inject internal constructor(
 ) : ViewModel() {
 
     private val growZone: MutableStateFlow<Int> = MutableStateFlow(
-        savedStateHandle.get(GROW_ZONE_SAVED_STATE_KEY) ?: NO_GROW_ZONE
+        savedStateHandle[GROW_ZONE_SAVED_STATE_KEY] ?: NO_GROW_ZONE
     )
 
-    val plants: LiveData<List<Plant>> = growZone.flatMapLatest { zone ->
-        if (zone == NO_GROW_ZONE) {
+    val plants: LiveData<List<Plant.PlantWithImage>> = growZone.flatMapLatest { zone ->
+        val actualPlants = if (zone == NO_GROW_ZONE) {
             plantRepository.getPlants()
         } else {
             plantRepository.getPlantsWithGrowZoneNumber(zone)
+        }
+
+        actualPlants.map { plants ->
+            val baseUrl = plants.fold(plants.first().imageUrl) { baseUrl, plant ->
+                val urlLength = fun(): Int {
+                    val lengthToCompare = min(baseUrl.length, plant.imageUrl.length)
+                    for (index in 0 until lengthToCompare) {
+                        if (baseUrl[index] != plant.imageUrl[index]) {
+                            return index + 1
+                        }
+                    }
+                    return lengthToCompare
+                }()
+
+
+                baseUrl.take(urlLength)
+            }
+
+            val httpClient = SimpleHttpClient(URL(baseUrl))
+
+            plants.map { plant ->
+                plant.withImageLoader(httpClient)
+            }
         }
     }.asLiveData()
 

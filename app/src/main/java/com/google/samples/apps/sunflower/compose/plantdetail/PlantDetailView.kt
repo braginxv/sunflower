@@ -53,19 +53,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -91,10 +87,12 @@ import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.compose.Dimens
 import com.google.samples.apps.sunflower.compose.utils.TextSnackbarContainer
+import com.google.samples.apps.sunflower.compose.utils.fetchPlantImage
 import com.google.samples.apps.sunflower.compose.visible
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.databinding.ItemPlantDescriptionBinding
 import com.google.samples.apps.sunflower.viewmodels.PlantDetailViewModel
+import kotlinx.coroutines.launch
 
 /**
  * As these callbacks are passed in through multiple Composables, to avoid having to name
@@ -124,7 +122,7 @@ fun PlantDetailsScreen(
                 onDismissSnackbar = { plantDetailsViewModel.dismissSnackbar() }
             ) {
                 PlantDetails(
-                    plant,
+                    plant.withImageLoader(),
                     isPlanted,
                     PlantDetailsCallbacks(
                         onBackClick = onBackClick,
@@ -142,7 +140,7 @@ fun PlantDetailsScreen(
 @VisibleForTesting
 @Composable
 fun PlantDetails(
-    plant: Plant,
+    plant: Plant.PlantWithImage,
     isPlanted: Boolean,
     callbacks: PlantDetailsCallbacks,
     modifier: Modifier = Modifier
@@ -222,7 +220,7 @@ fun PlantDetails(
 private fun PlantDetailsContent(
     scrollState: ScrollState,
     toolbarState: ToolbarState,
-    plant: Plant,
+    plant: Plant.PlantWithImage,
     isPlanted: Boolean,
     imageHeight: Dp,
     onNamePosition: (Float) -> Unit,
@@ -234,7 +232,7 @@ private fun PlantDetailsContent(
             val (image, fab, info) = createRefs()
 
             PlantImage(
-                imageUrl = plant.imageUrl,
+                bitmap = fetchPlantImage(plant),
                 imageHeight = imageHeight,
                 modifier = Modifier
                     .constrainAs(image) { top.linkTo(parent.top) }
@@ -273,34 +271,20 @@ private fun PlantDetailsContent(
 
 @Composable
 private fun PlantImage(
-    imageUrl: String,
+    bitmap: ImageBitmap,
     imageHeight: Dp,
     modifier: Modifier = Modifier,
     placeholderColor: Color = MaterialTheme.colors.onSurface.copy(0.2f)
 ) {
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(data = imageUrl)
-            .crossfade(true)
-            .build()
-    )
 
     Image(
-        painter = painter,
+        bitmap = bitmap,
         contentScale = ContentScale.Crop,
         contentDescription = null,
         modifier = modifier
             .fillMaxWidth()
             .height(imageHeight)
     )
-
-    if (painter.state is AsyncImagePainter.State.Loading) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(placeholderColor)
-        )
-    }
 }
 
 @Composable
@@ -519,7 +503,10 @@ private fun PlantDetailContentPreview() {
     MdcTheme {
         Surface {
             PlantDetails(
-                Plant("plantId", "Tomato", "HTML<br>description", 6),
+                Plant("plantId",
+                    "Tomato",
+                    "HTML<br>description",
+                    6).withImageLoader(),
                 true,
                 PlantDetailsCallbacks({ }, { }, { })
             )

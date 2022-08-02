@@ -32,7 +32,7 @@ import com.google.samples.apps.sunflower.data.Plant
 /**
  * Adapter for the [RecyclerView] in [PlantListFragment].
  */
-class PlantAdapter : ListAdapter<Plant, RecyclerView.ViewHolder>(PlantDiffCallback()) {
+class PlantAdapter : ListAdapter<Plant.PlantWithImage, RecyclerView.ViewHolder>(PlantDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return PlantViewHolder(ComposeView(parent.context))
@@ -46,7 +46,7 @@ class PlantAdapter : ListAdapter<Plant, RecyclerView.ViewHolder>(PlantDiffCallba
     class PlantViewHolder(
         composeView: ComposeView
     ) : RecyclerView.ViewHolder(composeView) {
-        fun bind(plant: Plant) {
+        fun bind(plant: Plant.PlantWithImage) {
             (itemView as ComposeView).setContent {
                 MdcTheme {
                     PlantListItemView(plant = plant) {
@@ -56,7 +56,7 @@ class PlantAdapter : ListAdapter<Plant, RecyclerView.ViewHolder>(PlantDiffCallba
             }
         }
 
-        private fun navigateToPlant(plant: Plant) {
+        private fun navigateToPlant(plant: Plant.PlantWithImage) {
             val direction =
                 HomeViewPagerFragmentDirections.actionViewPagerFragmentToPlantDetailFragment(
                     plant.plantId
@@ -66,13 +66,13 @@ class PlantAdapter : ListAdapter<Plant, RecyclerView.ViewHolder>(PlantDiffCallba
     }
 }
 
-private class PlantDiffCallback : DiffUtil.ItemCallback<Plant>() {
+private class PlantDiffCallback : DiffUtil.ItemCallback<Plant.PlantWithImage>() {
 
-    override fun areItemsTheSame(oldItem: Plant, newItem: Plant): Boolean {
+    override fun areItemsTheSame(oldItem: Plant.PlantWithImage, newItem: Plant.PlantWithImage): Boolean {
         return oldItem.plantId == newItem.plantId
     }
 
-    override fun areContentsTheSame(oldItem: Plant, newItem: Plant): Boolean {
+    override fun areContentsTheSame(oldItem: Plant.PlantWithImage, newItem: Plant.PlantWithImage): Boolean {
         return oldItem == newItem
     }
 }

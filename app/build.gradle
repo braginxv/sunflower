@@ -63,11 +63,11 @@ android {
     kotlinOptions {
         // work-runtime-ktx 2.1.0 and above now requires Java 8
         jvmTarget = "1.8"
-        useIR = true
 
         // Enable Coroutines and Flow APIs
         freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
         freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.FlowPreview"
+        freeCompilerArgs += "-Xjvm-default=enable"
     }
     buildFeatures {
         compose true
@@ -107,6 +107,8 @@ dependencies {
     implementation "com.google.dagger:hilt-android:$rootProject.hiltVersion"
     implementation "androidx.profileinstaller:profileinstaller:$rootProject.profileInstallerVersion"
     implementation "androidx.tracing:tracing-ktx:$rootProject.tracingVersion"
+    implementation "io.coil-kt:coil:$rootProject.coilVersion"
+    implementation "io.coil-kt:coil-compose-base:$rootProject.coilVersion"
 
     // Compose
     implementation "androidx.activity:activity-compose:$rootProject.activityComposeVersion"

@@ -38,7 +38,7 @@ import kotlin.text.Typography.dagger
 class PlantDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     plantRepository: PlantRepository,
-    private val gardenPlantingRepository: GardenPlantingRepository,
+    private val gardenPlantingRepository: GardenPlantingRepository
 ) : ViewModel() {
 
     val plantId: String = savedStateHandle.get<String>(PLANT_ID_SAVED_STATE_KEY)!!

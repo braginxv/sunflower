@@ -17,7 +17,7 @@ import kotlin.coroutines.suspendCoroutine
 typealias NamedArguments = Set<Pair<String, String>>
 
 class SimpleHttpClient(
-    baseUrl: URL,
+    val baseUrl: URL,
     connectionType: HttpRequestBuilder.ConnectionType = HttpRequestBuilder.ConnectionType.Persistent,
     basicHeaders: NamedArguments = emptySet(),
     userAgent: String? = null
@@ -65,7 +65,8 @@ class SimpleHttpClient(
                     parameters: NamedArguments = emptySet()): Response {
         return suspendCoroutine { continuation ->
             connection.get(basePath + resource,
-                commonHeaders.plus(additionalHeaders).map(Companion::toTechlookPair), parameters.map(Companion::toTechlookPair),
+                commonHeaders.plus(additionalHeaders).map(Companion::toTechlookPair),
+                parameters.map(Companion::toTechlookPair),
                 object: ByteResponseListener() {
                     override fun respond(response: Either<String, Response>) {
                         continuation.resumeWith(responseToCoroutineResult(response))
