@@ -8,19 +8,16 @@ import org.techlook.http.PipeliningConnection
 import org.techlook.http.SequentialConnection
 import org.techlook.http.SingleConnection
 import org.techlook.http.adapters.*
-import org.techlook.http.client.HttpListener
-import java.lang.RuntimeException
 import java.net.URL
-import java.nio.charset.Charset
 import kotlin.coroutines.suspendCoroutine
 
 typealias NamedArguments = Set<Pair<String, String>>
 
 class SimpleHttpClient(
     val baseUrl: URL,
-    connectionType: HttpRequestBuilder.ConnectionType = HttpRequestBuilder.ConnectionType.Persistent,
-    basicHeaders: NamedArguments = emptySet(),
-    userAgent: String? = null
+    userAgent: String? = null,
+    connectionType: HttpRequestBuilder.ConnectionType = HttpRequestBuilder.ConnectionType.Single,
+    basicHeaders: NamedArguments = emptySet()
 ) {
     private val basePath = baseUrl.path.takeIf { it.endsWith(SLASH) } ?: (baseUrl.path + SLASH)
 
@@ -78,6 +75,7 @@ class SimpleHttpClient(
 
     companion object {
         const val AGENT_HEADER: String = "User-Agent"
+        const val AGENT_CLIENT: String = "Netgym network library (https://github.com/braginxv/netgym)"
         const val PIPELINING_SEND_INTERVAL: Long = 5
         const val HTTP = "http"
         const val HTTPS = "https"

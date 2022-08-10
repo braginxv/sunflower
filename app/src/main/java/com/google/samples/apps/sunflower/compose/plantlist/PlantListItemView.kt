@@ -22,15 +22,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.samples.apps.sunflower.R
+import com.google.samples.apps.sunflower.compose.utils.ComposableEffects
 import com.google.samples.apps.sunflower.compose.utils.fetchPlantImage
 import com.google.samples.apps.sunflower.data.Plant
 
@@ -51,8 +55,14 @@ fun PlantListItemView(plant: Plant.PlantWithImage, onClick: () -> Unit) {
             .padding(bottom = dimensionResource(id = R.dimen.card_bottom_margin)),
     ) {
         Column(Modifier.fillMaxWidth()) {
+            val resources = LocalContext.current.resources
+
+            val deferredImage by
+                fetchPlantImage(plant, resources, rememberCoroutineScope())
+                    .observeAsState(ComposableEffects.default(resources))
+
             Image(
-                bitmap = fetchPlantImage(plant = plant),
+                bitmap = deferredImage,
                 contentScale = ContentScale.Crop,
                 contentDescription = stringResource(R.string.a11y_plant_item_image),
                 modifier = Modifier

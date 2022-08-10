@@ -67,7 +67,7 @@ android {
         // Enable Coroutines and Flow APIs
         freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
         freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.FlowPreview"
-        freeCompilerArgs += "-Xjvm-default=enable"
+        freeCompilerArgs += "-Xjvm-default=all-compatibility"
     }
     buildFeatures {
         compose true

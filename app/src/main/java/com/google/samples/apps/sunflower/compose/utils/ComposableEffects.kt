@@ -1,22 +1,46 @@
-
 package com.google.samples.apps.sunflower.compose.utils
 
-import androidx.compose.runtime.*
+import android.content.res.Resources
+import android.graphics.drawable.VectorDrawable
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.data.Plant
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@Composable
-fun fetchPlantImage(plant: Plant.PlantWithImage): ImageBitmap {
-    val scope = rememberCoroutineScope()
-    val default = ImageBitmap.imageResource(R.mipmap.ic_launcher)
-    var image by remember { mutableStateOf(default) }
+object ComposableEffects {
+    fun default(resources: Resources) = (ResourcesCompat.getDrawable(
+        resources,
+        R.drawable.ic_my_garden_inactive, null
+    ) as VectorDrawable).toBitmap().asImageBitmap()
 
-    SideEffect {
-        scope.launch { plant.fetchImage()?.let { image = it } }
+    fun wrong(resources: Resources) = (ResourcesCompat.getDrawable(
+        resources,
+        R.drawable.ic_my_garden_active, null
+    ) as VectorDrawable).toBitmap().asImageBitmap()
+
+
+}
+
+fun fetchPlantImage(
+    plant: Plant.PlantWithImage,
+    resources: Resources,
+    scope: CoroutineScope
+): LiveData<ImageBitmap> {
+    val result = MutableLiveData<ImageBitmap>()
+
+    scope.launch {
+        result.value = try {
+            plant.fetchImage() ?: ComposableEffects.default(resources)
+        } catch (_: Exception) {
+            ComposableEffects.wrong(resources)
+        }
     }
 
-    return image
+    return result
 }

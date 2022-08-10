@@ -86,6 +86,7 @@ import coil.request.ImageRequest
 import com.google.android.material.composethemeadapter.MdcTheme
 import com.google.samples.apps.sunflower.R
 import com.google.samples.apps.sunflower.compose.Dimens
+import com.google.samples.apps.sunflower.compose.utils.ComposableEffects
 import com.google.samples.apps.sunflower.compose.utils.TextSnackbarContainer
 import com.google.samples.apps.sunflower.compose.utils.fetchPlantImage
 import com.google.samples.apps.sunflower.compose.visible
@@ -230,9 +231,14 @@ private fun PlantDetailsContent(
     Column(Modifier.verticalScroll(scrollState)) {
         ConstraintLayout {
             val (image, fab, info) = createRefs()
+            val resources = LocalContext.current.resources
+
+            val deferredImage by
+                fetchPlantImage(plant, resources, rememberCoroutineScope())
+                    .observeAsState(ComposableEffects.default(resources))
 
             PlantImage(
-                bitmap = fetchPlantImage(plant),
+                bitmap = deferredImage,
                 imageHeight = imageHeight,
                 modifier = Modifier
                     .constrainAs(image) { top.linkTo(parent.top) }

@@ -21,11 +21,14 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.samples.apps.sunflower.network.client.SimpleHttpClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Calendar
+import java.util.*
 import java.util.Calendar.DAY_OF_YEAR
 
 @Entity(tableName = "plants")
@@ -37,10 +40,13 @@ data class Plant(
     val wateringInterval: Int = 7, // how often the plant should be watered, in days
     val imageUrl: String? = null
 ) {
-    private fun letImageUrl() = imageUrl?.let { URL(it) }
-    private fun letBaseUrl() = letImageUrl()?.let { URL(it.protocol, it.host, "/") }
+    @Ignore
+    private val _imageUrl = imageUrl?.let { URL(it) }
 
-    inner class PlantWithImage(private val httpClient: SimpleHttpClient? = letBaseUrl()?.let { SimpleHttpClient(it) }) {
+    @Ignore
+    private val _baseUrl = _imageUrl?.let { URL(it.protocol, it.host, "/") }
+
+    inner class PlantWithImage(private val httpClient: SimpleHttpClient? = _baseUrl?.let { SimpleHttpClient(it) }) {
         val plantId = this@Plant.plantId
         val name = this@Plant.name
         val description = this@Plant.description
@@ -51,7 +57,9 @@ data class Plant(
             ?.drop(httpClient!!.baseUrl.toString().length)
 
         suspend fun fetchImage(): ImageBitmap? {
-            val response = resource?.let { httpClient!!.rawGET(it) } ?: return null
+            val response = withContext(Dispatchers.IO) {
+                resource?.let { httpClient!!.rawGET(it) }
+            } ?: return null
 
             if (HttpURLConnection.HTTP_OK != response.code) {
                 throw IllegalStateException(ERROR_RESPONSE.format(response.code))
@@ -59,7 +67,9 @@ data class Plant(
 
             val rawContent = response.content
 
-            return BitmapFactory.decodeByteArray(rawContent, 0, rawContent.size).asImageBitmap()
+            return BitmapFactory
+                .decodeByteArray(rawContent, 0, rawContent.size)
+                .asImageBitmap()
         }
 
         override fun equals(other: Any?): Boolean {
@@ -73,7 +83,7 @@ data class Plant(
         private val plant = this@Plant
     }
 
-    fun withImageLoader(httpClient: SimpleHttpClient? = letBaseUrl()?.let { SimpleHttpClient(it) }): PlantWithImage {
+    fun withImageLoader(httpClient: SimpleHttpClient? = _baseUrl?.let { SimpleHttpClient(it) }): PlantWithImage {
         return PlantWithImage(httpClient)
     }
 

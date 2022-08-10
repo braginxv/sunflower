@@ -51,6 +51,9 @@ class PlantListViewModel @Inject internal constructor(
 
         actualPlants.map { plants ->
             val baseUrl = plants.fold(plants.first().imageUrl) { baseUrl, plant ->
+                baseUrl ?: return@fold plant.imageUrl
+                plant.imageUrl ?: return@fold baseUrl
+
                 val urlLength = fun(): Int {
                     val lengthToCompare = min(baseUrl.length, plant.imageUrl.length)
                     for (index in 0 until lengthToCompare) {
@@ -60,7 +63,6 @@ class PlantListViewModel @Inject internal constructor(
                     }
                     return lengthToCompare
                 }()
-
 
                 baseUrl.take(urlLength)
             }
