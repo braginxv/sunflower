@@ -20,14 +20,14 @@ import androidx.lifecycle.*
 import com.google.samples.apps.sunflower.PlantListFragment
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.data.PlantRepository
-import com.google.samples.apps.sunflower.network.client.SimpleHttpClient
+import com.google.samples.apps.sunflower.network.client.NetgymHttpClient
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.net.URL
 import javax.inject.Inject
-import kotlin.math.*
+import kotlin.math.min
 
 /**
  * The ViewModel for [PlantListFragment].
@@ -67,7 +67,7 @@ class PlantListViewModel @Inject internal constructor(
                 baseUrl.take(urlLength)
             }
 
-            val httpClient = SimpleHttpClient(URL(baseUrl))
+            val httpClient = NetgymHttpClient(baseUrl!!)
 
             plants.map { plant ->
                 plant.withImageLoader(httpClient)

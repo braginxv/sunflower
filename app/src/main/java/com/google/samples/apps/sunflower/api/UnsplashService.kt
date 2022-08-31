@@ -16,19 +16,16 @@
 
 package com.google.samples.apps.sunflower.api
 
-import com.google.gson.FieldNamingStrategy
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.samples.apps.sunflower.BuildConfig
 import com.google.samples.apps.sunflower.data.UnsplashSearchResponse
-import com.google.samples.apps.sunflower.network.client.SimpleHttpClient
-import java.net.URL
+import com.google.samples.apps.sunflower.network.client.NetgymHttpClient
 
 /**
  * Used to connect to the Unsplash API to fetch photos
  */
 class UnsplashService {
-    private val client = SimpleHttpClient(URL(BASE_URL))
+    private val client = NetgymHttpClient(BASE_URL)
 
     suspend fun searchPhotos(query: String, page: Int, perPage: Int,
                              clientId: String = BuildConfig.UNSPLASH_ACCESS_KEY): UnsplashSearchResponse {

@@ -23,7 +23,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
-import com.google.samples.apps.sunflower.network.client.SimpleHttpClient
+import com.google.samples.apps.sunflower.network.client.NetgymHttpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
@@ -40,21 +40,15 @@ data class Plant(
     val wateringInterval: Int = 7, // how often the plant should be watered, in days
     val imageUrl: String? = null
 ) {
-    @Ignore
-    private val _imageUrl = imageUrl?.let { URL(it) }
-
-    @Ignore
-    private val _baseUrl = _imageUrl?.let { URL(it.protocol, it.host, "/") }
-
-    inner class PlantWithImage(private val httpClient: SimpleHttpClient? = _baseUrl?.let { SimpleHttpClient(it) }) {
+    inner class PlantWithImage(private val httpClient: NetgymHttpClient? = imageUrl?.let { NetgymHttpClient(it) }) {
         val plantId = this@Plant.plantId
         val name = this@Plant.name
         val description = this@Plant.description
         val growZoneNumber = this@Plant.growZoneNumber
         val wateringInterval = this@Plant.wateringInterval
         val resource = imageUrl
-            ?.takeIf { httpClient != null && it.startsWith(httpClient.baseUrl.toString()) }
-            ?.drop(httpClient!!.baseUrl.toString().length)
+            ?.takeIf { httpClient != null && it.startsWith(httpClient.baseUrl) }
+            ?.drop(httpClient!!.baseUrl.length)
 
         suspend fun fetchImage(): ImageBitmap? {
             val response = withContext(Dispatchers.IO) {
@@ -83,7 +77,7 @@ data class Plant(
         private val plant = this@Plant
     }
 
-    fun withImageLoader(httpClient: SimpleHttpClient? = _baseUrl?.let { SimpleHttpClient(it) }): PlantWithImage {
+    fun withImageLoader(httpClient: NetgymHttpClient? = imageUrl?.let { NetgymHttpClient(it) }): PlantWithImage {
         return PlantWithImage(httpClient)
     }
 

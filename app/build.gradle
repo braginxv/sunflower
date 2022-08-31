@@ -123,7 +123,7 @@ dependencies {
     implementation "androidx.compose.runtime:runtime-livedata:$rootProject.composeVersion"
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$rootProject.viewModelComposeVersion"
     implementation "com.google.android.material:compose-theme-adapter:$rootProject.composeThemeAdapterVersion"
-    implementation "com.github.braginxv:netgym:0.6-beta"
+//    implementation "com.github.braginxv:netgym:0.6-beta"
     debugImplementation "androidx.compose.ui:ui-tooling:$rootProject.composeVersion"
 
     // Testing dependencies
