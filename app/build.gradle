@@ -82,6 +82,11 @@ android {
         excludes += "/META-INF/AL2.0"
         excludes += "/META-INF/LGPL2.1"
     }
+
+    testVariants.all { variant ->
+        variant.getCompileConfiguration().exclude group: 'org.checkerframework', module: 'checker'
+        variant.getRuntimeConfiguration().exclude group: 'org.checkerframework', module: 'checker'
+    }
 }
 
 dependencies {

@@ -43,31 +43,15 @@ class PlantListViewModel @Inject internal constructor(
     )
 
     val plants: LiveData<List<Plant.PlantWithImage>> = growZone.flatMapLatest { zone ->
-        val actualPlants = if (zone == NO_GROW_ZONE) {
+        val plantsToBeListed = if (zone == NO_GROW_ZONE) {
             plantRepository.getPlants()
         } else {
             plantRepository.getPlantsWithGrowZoneNumber(zone)
         }
 
-        actualPlants.map { plants ->
-            val baseUrl = plants.fold(plants.first().imageUrl) { baseUrl, plant ->
-                baseUrl ?: return@fold plant.imageUrl
-                plant.imageUrl ?: return@fold baseUrl
-
-                val urlLength = fun(): Int {
-                    val lengthToCompare = min(baseUrl.length, plant.imageUrl.length)
-                    for (index in 0 until lengthToCompare) {
-                        if (baseUrl[index] != plant.imageUrl[index]) {
-                            return index + 1
-                        }
-                    }
-                    return lengthToCompare
-                }()
-
-                baseUrl.take(urlLength)
-            }
-
-            val httpClient = NetgymHttpClient(baseUrl!!)
+        plantsToBeListed.map { plants ->
+            val urls = plants.mapNotNull { it.imageUrl }
+            val httpClient = NetgymHttpClient(NetgymHttpClient.baseUrlFor(urls))
 
             plants.map { plant ->
                 plant.withImageLoader(httpClient)

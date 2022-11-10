@@ -1,19 +1,19 @@
 package com.google.samples.apps.sunflower.network.client
 
-import android.util.Log
 import org.techlook.Either
 import org.techlook.http.PipeliningConnection
 import org.techlook.http.adapters.Response
 import org.techlook.http.adapters.SimpleHttpClient
 import org.techlook.http.adapters.StringResponse
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.min
 
 typealias NamedArguments = Set<Pair<String, String>>
 
 class NetgymHttpClient(
     val baseUrl: String,
     userAgent: String = AGENT_CLIENT,
-    connectionType: SimpleHttpClient.ConnectionType = SimpleHttpClient.ConnectionType.Single,
+    connectionType: SimpleHttpClient.ConnectionType = SimpleHttpClient.ConnectionType.Pipelining,
     basicHeaders: NamedArguments = emptySet(),
     pipelineSendingInterval: Long = PipeliningConnection.DEFAULT_SENDING_INTERVAL
 ) {
@@ -59,15 +59,31 @@ class NetgymHttpClient(
             var result: Result<R> = Result.failure(NetworkClientException("result is unset"))
 
             response.right().apply {
-                Log.d("Success HTTP response", "")
                 result = Result.success(it)
             }
             response.left().apply {
-                Log.e("Wrong HTTP response", it.toString())
                 result = Result.failure(NetworkClientException(it.toString()))
             }
 
             return result
+        }
+
+        fun baseUrlFor(urls: Iterable<String>): String {
+            val basePart = urls.reduce { baseUrl, url ->
+                val urlLength = fun(): Int {
+                    val lengthToCompare = min(baseUrl.length, url.length)
+                    for (index in 0 until lengthToCompare) {
+                        if (baseUrl[index] != url[index]) {
+                            return index
+                        }
+                    }
+                    return lengthToCompare
+                }()
+
+                baseUrl.take(urlLength)
+            }
+
+            return basePart.dropLastWhile { it != '/' }
         }
 
         private fun <K, V> toTechlook(keyValueSet: Set<Pair<K, V>>):

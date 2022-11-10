@@ -67,7 +67,7 @@ class PlantDetailComposeTest {
 }
 
 @Composable
-private fun plantForTesting(): Plant {
+private fun plantForTesting(): Plant.PlantWithImage {
     return Plant(
         plantId = "malus-pumila",
         name = "Apple",
@@ -75,7 +75,7 @@ private fun plantForTesting(): Plant {
         growZoneNumber = 3,
         wateringInterval = 30,
         imageUrl = rawUri(R.raw.apple).toString()
-    )
+    ).PlantWithImage()
 }
 
 /**
