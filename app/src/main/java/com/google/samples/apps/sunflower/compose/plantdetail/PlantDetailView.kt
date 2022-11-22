@@ -86,6 +86,8 @@ fun PlantDetailsScreen(
     val plant = plantDetailsViewModel.plant.observeAsState().value
     val isPlanted = plantDetailsViewModel.isPlanted.observeAsState().value
     val showSnackbar = plantDetailsViewModel.showSnackbar.observeAsState().value
+    val plantImageBaseUrl = plantDetailsViewModel.plantImageBaseUrl
+    val httpClient = plantDetailsViewModel.mutualHttpClient
 
     if (plant != null && isPlanted != null && showSnackbar != null) {
         Surface {
@@ -95,7 +97,7 @@ fun PlantDetailsScreen(
                 onDismissSnackbar = { plantDetailsViewModel.dismissSnackbar() }
             ) {
                 PlantDetails(
-                    plant.withImageLoader(),
+                    plant.withImageLoader(plantImageBaseUrl, httpClient),
                     isPlanted,
                     PlantDetailsCallbacks(
                         onBackClick = onBackClick,
@@ -481,10 +483,12 @@ private fun PlantDetailContentPreview() {
     MdcTheme {
         Surface {
             PlantDetails(
-                Plant("plantId",
+                Plant(
+                    "plantId",
                     "Tomato",
                     "HTML<br>description",
-                    6).withImageLoader(),
+                    6
+                ).withImageLoader(null, null),
                 true,
                 PlantDetailsCallbacks({ }, { }, { })
             )

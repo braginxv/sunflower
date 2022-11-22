@@ -20,14 +20,15 @@ import androidx.lifecycle.*
 import com.google.samples.apps.sunflower.PlantListFragment
 import com.google.samples.apps.sunflower.data.Plant
 import com.google.samples.apps.sunflower.data.PlantRepository
-import com.google.samples.apps.sunflower.network.client.NetgymHttpClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.techlook.net.client.kotlin.ConnectionLifetime
+import org.techlook.net.client.kotlin.NetgymHttpClient
+import java.net.URL
 import javax.inject.Inject
-import kotlin.math.min
 
 /**
  * The ViewModel for [PlantListFragment].
@@ -51,10 +52,12 @@ class PlantListViewModel @Inject internal constructor(
 
         plantsToBeListed.map { plants ->
             val urls = plants.mapNotNull { it.imageUrl }
-            val httpClient = NetgymHttpClient(NetgymHttpClient.baseUrlFor(urls))
+            val baseUrl = NetgymHttpClient.baseUrlFor(urls)
+            val httpClient = NetgymHttpClient(
+                URL(baseUrl), ConnectionLifetime.Pipelining)
 
             plants.map { plant ->
-                plant.withImageLoader(httpClient)
+                plant.withImageLoader(baseUrl, httpClient)
             }
         }
     }.asLiveData()

@@ -16,20 +16,17 @@
 
 package com.google.samples.apps.sunflower.viewmodels
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.google.samples.apps.sunflower.BuildConfig
 import com.google.samples.apps.sunflower.PlantDetailFragment
 import com.google.samples.apps.sunflower.data.GardenPlantingRepository
 import com.google.samples.apps.sunflower.data.PlantRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.techlook.net.client.kotlin.ConnectionLifetime
+import org.techlook.net.client.kotlin.NetgymHttpClient
+import java.net.URL
 import javax.inject.Inject
-import kotlin.text.Typography.dagger
 
 /**
  * The ViewModel used in [PlantDetailFragment].
@@ -45,6 +42,14 @@ class PlantDetailViewModel @Inject constructor(
 
     val isPlanted = gardenPlantingRepository.isPlanted(plantId).asLiveData()
     val plant = plantRepository.getPlant(plantId).asLiveData()
+    val plantImageBaseUrl by lazy {
+        plantRepository.plantImageBaseUrl().asLiveData<String?>().value
+    }
+    val mutualHttpClient: NetgymHttpClient? by lazy {
+        plantImageBaseUrl?.let {
+            NetgymHttpClient(URL(it), ConnectionLifetime.Pipelining)
+        }
+    }
 
     private val _showSnackbar = MutableLiveData(false)
     val showSnackbar: LiveData<Boolean>

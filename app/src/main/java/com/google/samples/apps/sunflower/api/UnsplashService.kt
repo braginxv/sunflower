@@ -19,24 +19,26 @@ package com.google.samples.apps.sunflower.api
 import com.google.gson.GsonBuilder
 import com.google.samples.apps.sunflower.BuildConfig
 import com.google.samples.apps.sunflower.data.UnsplashSearchResponse
-import com.google.samples.apps.sunflower.network.client.NetgymHttpClient
+import org.techlook.net.client.kotlin.ConnectionLifetime
+import org.techlook.net.client.kotlin.NetgymHttpClient
+import java.net.URL
 
 /**
  * Used to connect to the Unsplash API to fetch photos
  */
 class UnsplashService {
-    private val client = NetgymHttpClient(BASE_URL)
+    private val client = NetgymHttpClient(URL(BASE_URL), ConnectionLifetime.Pipelining)
 
     suspend fun searchPhotos(query: String, page: Int, perPage: Int,
                              clientId: String = BuildConfig.UNSPLASH_ACCESS_KEY): UnsplashSearchResponse {
-        val parameters: Set<Pair<String, String>> = setOf(
+        val parameters = mapOf(
             "query" to query,
             "page" to page.toString(),
             "per_page" to perPage.toString(),
             "client_id" to clientId
         )
 
-        val response = client.GET(PHOTOS, parameters = parameters)
+        val response = client.get(PHOTOS, parameters = parameters)
 
         if (response.code >= 400) {
             throw IllegalAccessException("requested photos aren't available")
@@ -47,7 +49,7 @@ class UnsplashService {
     }
 
     suspend fun downloadPhoto(url: String): ByteArray {
-        return client.rawGET(url).content
+        return client.rawGet(url).content
     }
 
     companion object {

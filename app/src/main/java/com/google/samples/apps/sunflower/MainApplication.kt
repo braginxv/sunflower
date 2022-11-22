@@ -17,15 +17,14 @@
 package com.google.samples.apps.sunflower
 
 import android.app.Application
-import android.util.Log
+import androidx.databinding.ktx.BuildConfig
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
-import org.techlook.ClientSystem
+import org.techlook.net.client.ClientSystem
 
 @HiltAndroidApp
 class MainApplication : Application(), Configuration.Provider {
     override fun getWorkManagerConfiguration(): Configuration {
-        Log.d(javaClass.simpleName, "configuration request....")
         return Configuration.Builder()
             .setMinimumLoggingLevel(if (BuildConfig.DEBUG) android.util.Log.DEBUG else android.util.Log.ERROR)
             .build()

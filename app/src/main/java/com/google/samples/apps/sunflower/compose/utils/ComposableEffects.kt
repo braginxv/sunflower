@@ -37,7 +37,8 @@ object ComposableEffects {
             try {
                 val fetchedImage = plant.fetchImage()
                 emit(fetchedImage ?: default(resources))
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                e.printStackTrace()
                 emit(wrong(resources))
             }
         }

@@ -17,8 +17,8 @@
 package com.google.samples.apps.sunflower.data
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import org.techlook.net.client.kotlin.NetgymHttpClient
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,39 +30,17 @@ import javax.inject.Singleton
  */
 @Singleton
 class PlantRepository @Inject constructor(private val plantDao: PlantDao) {
-    private val plants: List<Plant> = listOf(
-        Plant(
-            "1", "magnolia",
-            "beautiful magnolia", 5,
-            imageUrl = "https://192.168.22.9/example/images/60544-cvetenie_vetka_rozovyj.jpg"
-        ),
-        Plant(
-            "2",
-            "magnolia excellent",
-            "very beautiful magnolia",
-            4,
-            imageUrl = "https://192.168.22.9/example/images/61216-zavtrak_pirozhnoe_mindal.jpg"
-        ),
-        Plant(
-            "3", "plant",
-            "simple plant", 4,
-            imageUrl = "https://192.168.22.9/example/images/61440-kamni_ostrov_okean.jpg"
-        ),
-        Plant(
-            "4",
-            "yet another plant",
-            "plant",
-            6,
-            imageUrl = "https://192.168.22.9/example/images/61709-minimalizm_poezd_gory.jpg"
-        ),
-    )
 
-    fun getPlants(): Flow<List<Plant>> = flowOf(plants)
+    fun getPlants(): Flow<List<Plant>> = plantDao.getPlants()
 
-    fun getPlant(plantId: String): Flow<Plant> = flowOf(plants.find { it.plantId == plantId }!!)
+    fun plantImageBaseUrl(): Flow<String?> = getPlants().map { loadedPlants ->
+        NetgymHttpClient.baseUrlFor(loadedPlants.mapNotNull { it.imageUrl })
+    }
+
+    fun getPlant(plantId: String) = plantDao.getPlant(plantId)
 
     fun getPlantsWithGrowZoneNumber(growZoneNumber: Int): Flow<List<Plant>> =
-        flowOf(plants.filter { it.growZoneNumber == growZoneNumber })
+        plantDao.getPlantsWithGrowZoneNumber(growZoneNumber)
 
     companion object {
 
@@ -70,7 +48,7 @@ class PlantRepository @Inject constructor(private val plantDao: PlantDao) {
         @Volatile
         private var instance: PlantRepository? = null
 
-        fun getInstance(plantDao: PlantDao): PlantRepository =
+        fun getInstance(plantDao: PlantDao) =
             instance ?: synchronized(this) {
                 instance ?: PlantRepository(plantDao).also { instance = it }
             }

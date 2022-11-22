@@ -21,11 +21,11 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
-import com.google.samples.apps.sunflower.network.client.NetgymHttpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.techlook.net.client.kotlin.ConnectionLifetime
+import org.techlook.net.client.kotlin.NetgymHttpClient
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
@@ -40,23 +40,24 @@ data class Plant(
     val wateringInterval: Int = 7, // how often the plant should be watered, in days
     val imageUrl: String? = null
 ) {
-    inner class PlantWithImage(private val httpClient: NetgymHttpClient? = imageUrl?.let { NetgymHttpClient(it) }) {
+    inner class PlantWithImage internal constructor(
+        private val fetching: Pair<String, NetgymHttpClient>?
+    ) {
         val plantId = this@Plant.plantId
         val name = this@Plant.name
         val description = this@Plant.description
         val growZoneNumber = this@Plant.growZoneNumber
         val wateringInterval = this@Plant.wateringInterval
-        val resource = imageUrl
-            ?.takeIf { httpClient != null && it.startsWith(httpClient.baseUrl) }
-            ?.drop(httpClient!!.baseUrl.length)
 
         suspend fun fetchImage(): ImageBitmap? {
             val response = withContext(Dispatchers.IO) {
-                resource?.let { httpClient!!.rawGET(it) }
+                fetching?.let { (imagePath, httpClient) ->
+                    httpClient.rawGet(imagePath)
+                }
             } ?: return null
 
             if (HttpURLConnection.HTTP_OK != response.code) {
-                throw IllegalStateException(ERROR_RESPONSE.format(response.code))
+                throw IllegalStateException(ERROR_RESPONSE.format(imageUrl, response.code))
             }
 
             val rawContent = response.content
@@ -77,8 +78,23 @@ data class Plant(
         private val plant = this@Plant
     }
 
-    fun withImageLoader(httpClient: NetgymHttpClient? = imageUrl?.let { NetgymHttpClient(it) }): PlantWithImage {
-        return PlantWithImage(httpClient)
+    fun withImageLoader(
+        baseURL: String?,
+        httpClient: NetgymHttpClient?
+    ): PlantWithImage {
+        val imagePath = baseURL?.let { baseUrl ->
+            imageUrl?.replace(baseUrl, "")
+        }
+
+        return PlantWithImage(imagePath?.let {
+            imagePath to
+                    (httpClient ?: NetgymHttpClient(URL(baseURL), ConnectionLifetime.Pipelining))
+        } ?: imageUrl?.let {
+            val url = URL(imageUrl)
+            url.file to
+                    NetgymHttpClient(URL("${url.protocol}://${url.host}"),
+                        ConnectionLifetime.Closable)
+        })
     }
 
     /**
@@ -91,7 +107,7 @@ data class Plant(
     override fun toString() = name
 
     companion object {
-        const val ERROR_RESPONSE = "Bad response during the image downloading: %d"
+        const val ERROR_RESPONSE = "Image '%s' wasn't loaded. The server returned a bad response: %d"
     }
 }
 
